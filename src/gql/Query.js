@@ -1,31 +1,107 @@
 import { gql } from "@apollo/client";
 
-export const CONTINENT_QUERY = gql`
-  query ContinentQuery {
-    continents {
-      code
-      name
-    }
-  }
-`;
+  // get most starred repos in the last 30 days
 
-// query github trending repos for react native graphql
-
-//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 
-
-export const REPO_QUERY = gql`
-  query RepoQuery {
-    search(query: "trending ", type: REPOSITORY, first: 10) {
-      edges {
-        node {
-          ... on Repository {
+export const REPO_QUERY = gql `
+{
+  search(query: "stars:>100000 language:TypeScript ", type: REPOSITORY, first: 100) {
+    edges {
+      node {
+        ... on Repository {
+          id
+          name
+          description
+          url
+          stars: stargazerCount
+          createdAt
+          primaryLanguage {
+            color
+            id
             name
-            description
+          }
+          forkCount
+          nameWithOwner
+          repositoryTopics(first: 10) {
+            edges {
+              node {
+                topic {
+                  name
+                }
+              }
+            }
           }
         }
       }
     }
   }
-`;
+}
 
-// grapgql query with authentication token for github api
+  `;
+//latest
+// {
+//   search(query: "stars:>100000", type: REPOSITORY, first: 100, ) {
+//     edges {
+//       node {
+//         ... on Repository {
+//           name
+//           description
+//           url
+//           stars: stargazerCount
+//           createdAt
+//           primaryLanguage {
+//             name
+//           }
+//           forkCount
+//         }
+//       }
+//     }
+//   }
+// }
+
+
+  // query {  
+  //   search(query: "stars:>100000", type: REPOSITORY, first: 100) { 
+  //     edges {
+  //       node {
+  //         ... on Repository {
+  //           name
+  //           description
+  //           url
+  //           stars: stargazerCount
+            
+  //         }
+  //       }
+  //     }
+  //   }
+  // }	
+
+
+  // query {
+  //   search(query: "stars", type: REPOSITORY, first: 10) {
+  //     edges {
+  //       node {
+  //         ... on Repository {
+  //           name
+  //           description
+  //           url
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+
+// most starred repos in the last 5 days 
+// query {  
+//   search(query: "stars:>1", type: REPOSITORY, first: 10) { 
+//     edges {
+//       node {
+//         ... on Repository {
+//           name
+//           description
+//           url
+//         }
+//       }
+//     }
+//   }
+// }
+
