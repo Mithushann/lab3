@@ -3,14 +3,20 @@ import React, { useEffect } from 'react';
 import { StyleSheet, Text, View, Button, FlatList, Pressable } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-//import { REPO_QUERY } from "./src/gql/Query";
 import DetailsScreen from "./Components/Details"
+
 // Integrating grapgql with react native
 import { useQuery } from "@apollo/client";
 import { AppRegistry } from 'react-native';
 import { ApolloClient, InMemoryCache, ApolloProvider, HttpLink, gql } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
+
+// language selector
 import { SelectList } from 'react-native-dropdown-select-list'
+
+// import styles
+import styles from "./Components/appStyles"
+
 
 
 const Stack = createNativeStackNavigator();
@@ -88,9 +94,10 @@ const HomeScreen = ({ navigation }) => {
 
  //when slected language changes, update the query
 
-  const REPO_QUERY = gql `
+ if (selected == "0") {
+    var REPO_QUERY = gql `
   {
-    search(query: "stars:>10000 language:${languages[selected].value}", type: REPOSITORY, first: 100) {
+    search(query: "stars:>100000 ", type: REPOSITORY, first: 100) {
       edges {
         node {
           ... on Repository {
@@ -122,6 +129,44 @@ const HomeScreen = ({ navigation }) => {
     }
   }
     `;
+  }
+  else {
+
+  var REPO_QUERY = gql `
+  {
+    search(query: "stars:>100000 language:${languages[selected].value}", type: REPOSITORY, first: 100) {
+      edges {
+        node {
+          ... on Repository {
+            id
+            name
+            description
+            url
+            stars: stargazerCount
+            createdAt
+            primaryLanguage {
+              color
+              id
+              name
+            }
+            forkCount
+            nameWithOwner
+            repositoryTopics(first: 10) {
+              edges {
+                node {
+                  topic {
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+    `;
+  }
 
   const { data, loading } = useQuery(REPO_QUERY); //execute query
   const RepoItem = ({ repo }) => {
@@ -138,27 +183,27 @@ const HomeScreen = ({ navigation }) => {
           })
         }
       >
-        <View style={{ backgroundColor: "white", padding: 10, margin: 5, borderRadius: 5, elevation: 5 }}>
-          <View style={{ flex: 1, flexDirection: "row", justifyContent: "space-between" }}>
-            <Text style={{ fontSize: 15, fontWeight: "bold" }} >🗃️ {cutName(name)}</Text>
-            <Text style={{ fontSize: 15, fontWeight: "bold" }}> {stars.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} &#x2605;</Text>
+        <View style={styles.card}>
+          <View style={styles.rowView}>
+            <Text style={styles.bigText}>🗃️ {cutName(name)}</Text>
+            <Text style={styles.bigText}> {stars.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} &#x2605;</Text>
           </View>
-          <Text>{cutDescription(description)}</Text>
+          <Text style={styles.bigText}>{cutDescription(description)}</Text>
 
-          <View style={{ flex: 1, flexDirection: "row", justifyContent: "space-between" }}>
-            <Text style={{ fontSize: 12, color: "grey" }}>🍴 {forkCount}</Text>
+          <View style={styles.rowView}>
+            <Text style={styles.smallText}>🍴 {forkCount}</Text>
             {primaryLanguage ? (
-              <Text style={{ fontSize: 10, color: "grey" }}>🌐 {primaryLanguage.name}</Text>
+              <Text style={styles.smallText}>🌐 {primaryLanguage.name}</Text>
             ) : (
-              <Text style={{ fontSize: 10, color: "grey" }}>🌐 No language</Text>
+              <Text style={styles.smallText}>🌐 No language</Text>
             )}
-            <Text style={{ fontSize: 10, color: "grey" }}>📅 {createdAt.toString().split("T")[0]}</Text>
+            <Text style={styles.smallText}>📅 {createdAt.toString().split("T")[0]}</Text>
           </View>
         </View>
       </Pressable>
     );
-
   }
+
   if (loading) {
     return <Text>Fetching data...</Text> //while loading return this
   }
@@ -166,15 +211,14 @@ const HomeScreen = ({ navigation }) => {
     <View style={styles.container}>
       <View style={{ justifyContent: "space-between" }}>
         <SelectList
-             style={{ width: 200, height: 50, backgroundColor: "white", borderRadius: 5, elevation: 5, padding: 10 }}
+             style={styles.selectedList}
              setSelected={setSelected} 
              data={languages}  
              search={false} 
-             boxStyles={{borderRadius:0}} //override default styles
-            //  defaultOption={{ key:'0', value:'all languages' }} 
+             boxStyles={{borderRadius:0}} 
         />
        
-        <FlatList style={{ width: 400, padding: 25 }}
+        <FlatList style={styles.list}
           data={data.search.edges}
           renderItem={({ item }) => <RepoItem repo={item.node} />}
           keyExtractor={(item) => item.node.name+item.node.id}
@@ -184,19 +228,3 @@ const HomeScreen = ({ navigation }) => {
   );
 };
 
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  element: {
-    marginBottom: 10,
-    border: 3,
-    borderColor: "blue",
-    borderRadius: 5
-  }
-});
